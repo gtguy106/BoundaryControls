@@ -1,0 +1,438 @@
+Lab 6.1: Boundary Controls
+
+Purpose:
+In this lab, you will gain hands-on experience in deploying essential tools and techniques to bolster network and device security. Working within a Linux environment, you will explore a range of boundary controls, including deterrent, preventive, and detective measures, equipping you with the skills to enhance the resilience of your systems against potential threats.
+
+During the lab, you will delve into the intricacies of server-hardening techniques, gaining insights into best practices for securing servers effectively. You will also master the art of leveraging the Linux built-in firewall, iptables, to regulate traffic flow and shield your server from common server-side attacks.
+
+The knowledge and skills acquired throughout this lab are not only applicable within the confines of a controlled environment but can also be adapted for use on Internet-facing servers, further strengthening the security posture of critical infrastructures.
+
+Lab Sections:
+
+
+1.	Limiting Access to Shared Memory in Linux
+Explore essential commands and techniques to limit access to shared memory in Linux environments.
+2.	Limiting SSH Login to Specific Users in Linux
+Learn the necessary commands and techniques to limit login to specific users of SSH in Linux environments.
+3.	Limiting Users' Ability to Change to a Different User in Linux
+Explore essential commands and techniques to limit users’ ability to elevate privileges in Linux environments.
+4.	Disabling USB Drive Usage
+Learn the necessary commands and techniques to prevent the mounting and use of USB drives in Linux environments.
+5.	Checking for Open Ports in Linux
+Learn the necessary commands and techniques to scan and check for open ports with the tool netstat in Linux environments.
+6.	Iptables Firewall
+Explore essential commands and techniques to configure and utilize the iptables firewall in Linux environments.
+7.	Appendix: rc.local Configuration Code (Part 4)
+A collection of code snippets for configuring the rc.local service to disable USB drive usage, which is specifically designed for the tasks covered in Part 4 of this exercise.
+
+
+
+
+Resources – Explore these before continuing with the lab:
+•	What is Shared Memory: https://en.wikipedia.org/wiki/Shared_memory		
+•	Shared Memory in Linux: https://datacadamia.com/os/memory/shared	
+•	Linux fstab File and File System: https://www.howtogeek.com/38125/htg-explains-what-is-the-linux-fstab-and-how-does-it-work/ 	
+•	Ubuntu Systemd-logind Service: https://manpages.ubuntu.com/manpages/trusty/man8/systemd-logind.service.8.html 
+•	Ubuntu Systemd-logind Config File: https://manpages.ubuntu.com/manpages/xenial/man5/logind.conf.5.html	
+•	Linux Wildcards: https://www.educba.com/linux-wildcards/	
+•	OpenSSH Server Configuration File ssh_config: https://www.ssh.com/academy/ssh/sshd_config 
+•	How to Restrict or Allow SSH root Login: https://www.golinuxcloud.com/restrict-allow-ssh-certain-users-groups-rhel/	 
+•	How to Set Up SSH Keys on Ubuntu 22.04: https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-ubuntu-22-04	
+•	Server Hardening: https://www.lifewire.com/harden-ubuntu-server-security-4178243
+•	Hardening su with dpkg-statoverride: https://unix.stackexchange.com/questions/289743/how-to-harden-su-with-dpkg-statoverride 
+•	Read-only Mounting: https://www.addictivetips.com/ubuntu-linux-tips/mount-file-systems-as-read-only-on-linux/  
+•	How To Enable /etc/rc.local with Systemd: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd 
+•	Netstat Explained: https://www.lifewire.com/netstat-command-2618098 
+•	Iptables Setup: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-iptables-firewall-to-protect-traffic-between-your-servers 
+•	Types of Firewalls: https://phoenixnap.com/blog/types-of-firewalls 
+•	SSH Tarpitting To Avoid Brute Forcing (Video Tutorial): https://www.youtube.com/watch?v=qPEA6J9pjG8 
+
+Materials:
+Before beginning the lab, please ensure that you have the following set up:
+•	An Ubuntu Linux virtual machine aka Machine A.
+•	Another separate Kali Linux virtual machine aka Machine B.
+•	Ensure that both virtual machines are properly configured and operational.
+•	Verify that network connectivity is established between the two virtual machines, allowing for communication.
+•	Record the IP addresses of both Linux machines respectively, as you will need them for configuration and testing purposes.
+
+Completing these prerequisites will ensure a smooth experience while completing the lab exercises.
+
+WARNING! DO NOT PROCEED FURTHER BEFORE COMPLETING THIS STEP!
+------------------------------------------------------------------------------------------------------------
+Take a snapshot of your Ubuntu Linux and Kali Linux virtual machines NOW!
+
+The snapshot taken before proceeding with this lab will be extremely important to revert back to for Module 7. This will prevent potential issues that may arise from the changes made here.
+
+Part 1 - Limiting Access to Shared Memory:
+Shared memory is a mechanism that allows multiple processes to share a portion of memory for communication and data exchange. It enables processes to communicate efficiently by directly accessing the same memory space, eliminating the need for complex inter-process communication mechanisms. 
+
+However, with these advantages come genuine concerns regarding the security implications of unauthorized access to shared memory segments. When shared memory lacks proper access controls and security measures, unauthorized processes or users can potentially access sensitive data stored within the shared memory segment.
+
+In this exercise, we'll explore the critical role of the /etc/fstab file in configuring file systems, including shared memory segments, and delve into essential security measures that will help strike a delicate balance between performance optimization and safeguarding against potential security threats.
+
+Instructions:  
+1.	Launch your Ubuntu Linux machine (Machine A).
+2.	Open a terminal window.
+This can be accomplished quickly with the shortcut Ctrl + Alt + T.
+3.	Type the command mount | grep “tmpfs” | grep “shm” and hit Enter.
+This command checks and displays any existing shared memory mounts. You should find that /dev/shm is output which indicates that shared memory is mounted in the directory /dev/shm.
+ 
+4.	Type the command sudo cp /etc/fstab /etc/fstab.bak and hit Enter.
+This command creates a backup copy of the /etc/fstab file which is an essential step to avoid accidental data loss or system instability.
+ 
+5.	Type the command sudo nano /etc/fstab and hit Enter.
+This file shows some useful information such as:
+•	The Universally Unique Identifier (UUID) - a unique value assigned to the file system during formatting
+•	The mount point such as /
+•	The type of file system such as ext
+ 
+
+6.	Navigate to the last line/end of the file.
+7.	Type the line tmpfs /dev/shm tmpfs defaults,rw,nosuid,nodev,noexec 0 0
+This line tells the system to mount a temporary filesystem during the boot process with the following conditions:
+•	tmpfs: This indicates the type of filesystem. tmpfs is a temporary filesystem that resides in RAM, meaning it uses the computer's memory as storage. It's often used for temporary data, and its contents are lost when the system is rebooted.
+•	/dev/shm: This is the mount point, the directory where the tmpfs filesystem will be mounted. In this case, it is being mounted at the /dev/shm directory.
+•	tmpfs: This is the second occurrence of the filesystem type, which is specified again for clarity (the first occurrence was mentioned earlier).
+•	defaults: This option implies a standard set of mount options, which usually includes rw (read-write), suid (allow setuid execution), dev (interpret character or block special devices), and exec (allow execution of binaries). It's a shorthand way of specifying common mount options.
+•	rw: Mounts the filesystem in read-write mode, allowing both reading and writing to it.
+•	nosuid: Prevents the execution of setuid programs (programs with the setuid bit set, which temporarily elevates user privileges while executing).
+•	nodev: Prevents interpretation of character or block special devices on the filesystem.
+•	noexec: Disallows the execution of binaries or scripts on the filesystem.
+•	0 0: These are the dump and filesystem check order fields. They are used by filesystem maintenance tools like dump and fsck. In this case, both fields are set to 0, indicating that the filesystem won't be automatically backed up or checked by these tools.
+ 
+
+8.	Save and exit the file.
+9.	Type the command sudo mount -o remount /dev/shm and hit Enter.
+This command directs the system to remount the /dev/shm directory. 
+ 
+10.	Type the command mount | grep “tmpfs” | grep “shm” and hit Enter.
+You should notice that the output now includes the noexec option. This confirms that the changes you made have been applied successfully.
+ 
+11.	Task: What is the command that can be used to mount the boot directory in read-only mode, and why is it important?
+*** command => sudo mount -o remount.ro /boot
+•	For security reasons. Since the /boot directory contains critical files such as the kernel and boot loader configuration, mounting it as read-only prevents unauthorized modifications or accidental deletions
+•	Integrity. By protecting these files, you reduce the risk of corruption which would prevent the system from booting properly.
+•	Mounting sensitive directories like /boot as read-only serves to minimize the attack surface especially on production servers.
+
+Part 2 - Limiting SSH Login to Specific Users Only:
+As an administrator, maintaining strict control over remote access is crucial for ensuring the safety and efficiency of your system. This exercise will walk you through the essential steps of configuring the SSH daemon's behavior through the /etc/ssh/sshd_config file, empowering you to implement robust security measures.
+
+By leveraging the power of the /etc/ssh/sshd_config file, you will learn how to set user-specific permissions, enforce key-based authentication, and disable less secure password-based logins. These security configurations will enable you to fortify your machine against potential unauthorized access attempts and thwart malicious intruders effectively.
+
+Instructions:  
+1.	Launch your Kali Linux machine (Machine B).
+2.	Open a terminal window.
+3.	Type the command ssh-keygen and hit Enter.
+This command generates a private and public key for SSH access for the current machine.
+4.	Hit Enter in response to the first prompt to save the key generated in the default output directory.
+5.	Input a passphrase of your choosing for this SSH key when prompted and hit Enter.
+ 
+6.	Type the command ssh-copy-id username@remotehost and hit Enter.
+Where username is replaced by the username of your Ubuntu user and remotehost is replaced by the IP address of your Ubuntu machine.
+Example: ssh-copy-id iodyc@10.0.2.15
+ 
+This command copies your SSH public key from your Kali Linux client to Ubuntu’s SSH keyring. When you next attempt to remote in via SSH to the Ubuntu machine it will utilize PKI to authenticate remote access for your Kali client.
+7.	Type yes and hit Enter when prompted to confirm if you want to continue connecting. 
+8.	Input the password for the Ubuntu user account and hit Enter.
+You will be using a valid Ubuntu user account and password to make a quick SSH connection to the Ubuntu machine to securely transfer the Kali machine’s public key.
+9.	You should see output confirming 1 key added.
+This indicates that your Kali machine’s public key has been uploaded to the Ubuntu machine remotely.
+10.	Switch back over to your Ubuntu Linux virtual machine (Machine A).
+11.	Open a terminal window.
+12.	Type the command sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak and hit Enter.
+	This command creates a backup copy of the sshd_config file that you can revert to in case any changes made cause conflicts or issues in the service.
+ 
+13.	Type the command sudo nano /etc/ssh/sshd_config and hit Enter.
+ 
+ 
+
+14.	Find and ensure the following lines in the file are enabled and reflect the below:
+i.	PermitRootLogin no
+(disables root login to your SSH server, forcing administrators to log in with a regular user account and then switch to root using “sudo”)
+ii.	PasswordAuthentication no
+(disables password-based logins, requiring users to authenticate with a valid SSH key)
+15.	Navigate to the last line/end of the file.
+16.	Input the line AllowUsers username@IP_Address 
+Use usernames and IP addresses that suit the environment you are using.
+Where username is replaced by the username of your Ubuntu machine and IP_Address is replaced by the IP address of your Kali machine.
+Example: AllowUsers iodyc@10.0.2.5    OR   AllowUsers UbuntuUserAccount@KaliIPAddress
+ 
+Note: Wildcards such as * can be used to allow access to many users from a specific IP address (e.g. AllowUsers *@10.0.2.5)
+17.	Save the changes and exit the file.
+18.	Type the command sudo systemctl restart ssh and hit Enter.
+You have now configured your SSH server to only allow login from a specific approved user. If you attempt to remote via SSH from any other IP address that has not been explicitly allowed you will receive a permission denied message.
+ 
+19.	Switch over to your Kali Linux machine (Machine B).
+20.	Type the command ssh username@remote_host and hit Enter.
+Where username is replaced by the valid Ubuntu user account and remote_host is replaced by the IP address of your Ubuntu machine. 
+21.	Input the password you configured for your SSH key as per Step 5 and hit Enter.
+22.	You should successfully connect to the SSH service and remote into your Ubuntu machine!
+ 
+23.	Task: What configuration can you use to block a user from logging in? Can you apply this configuration and test your SSH connection to see the change?
+*** To block a user from logging in:
+DenyUsers username
+
+24.	Task: What configuration can you use to allow users coming from a specific subnet?
+*** AllowUsers *@10.0.2.0/24
+This will allow all users in as long as they are coming from 10.0.2.0/24
+25.	Task: The most insecure configuration in this category is AllowUsers *@*. Why is this configuration the most insecure?
+*** This is the most insecure configuration because it allows any user from any IP address to access the system via SSH
+
+Part 3 - Limiting Users' Ability to Change to a Different User:
+The su command (aka substitute or switch user) is a powerful tool that allows users to execute commands with the privileges of another user, offering a wide array of possibilities for system management and administration. However, in pursuit of enhanced security and control over server access, it becomes imperative to limit this feature exclusively to specific users, such as members of a designated group.
+
+Through the following exercise, you will delve into the intricacies of configuring su access restrictions, gaining valuable insights into user and group management in a Linux environment. By the end of this session, you will be well-versed in implementing a prudent approach to system security, ensuring that only authorized users possess the privilege to elevate their privileges via su. Empowered with this knowledge, you will be better equipped to maintain data integrity, system stability, and establish a more secure and efficient system management environment. 
+
+Instructions:  
+
+
+1.	Return to your Ubuntu Linux machine (Machine A).
+2.	Open a terminal window.
+3.	Type the command ls -l /bin/su and hit Enter.
+This command will list the /bin/su directory in detail which will show the current permissions. Note the user and group detailed to the left of the directory name.
+ 
+4.	Type the command groups and hit Enter.
+This command outputs the groups currently available and used by the system. Note the groups you observe.
+	 
+5.	Type the command id and hit Enter.
+This command outputs the user ID and group ID of the current user. Note the groups the user is associated with. This will confirm which group is appropriate for the next step.
+ 
+6.	Type the command sudo dpkg-statoverride --update --add root group 4750 /bin/su and hit Enter.
+Where group is replaced by the user group of your main/admin account.
+
+ 
+This command restricts access to the /bin/su directory which is required for the su command:
+•	 dpkg-statoverride: This is a command-line utility used to manage file access permissions and ownership overrides for packages in Debian-based systems like Ubuntu.
+•	--update: Specifies that the command is meant to update an existing stat override entry.
+•	--add: Instructs the command to add a new stat override entry.
+•	 root: Sets the owner of the file. In this case, the owner will be the "root" user.
+•	sudo: Sets the group of the file. In this case, the group will be the group of your main/admin account.
+•	4750: Sets the permissions for the file. The number "4750" represents a combination of file permissions in the Linux file permission system.
+These codes will be discussed in further detail in lab 6.2.
+•	•  /bin/su: Specifies the path to the file that you are configuring. In this case, it's the "/bin/su" binary, which is the "su" command.
+
+
+7.	Type the command ls -l /bin/su and hit Enter.
+The output of this command should confirm the change of permissions for the directory /bin/su. 
+ 
+Users outside of the group assigned to the /bin/su directory will now be unable to switch users to root with the su command.
+
+Part 4 - Disabling USB Drive Usage:
+Disabling the usage of USB sticks proves to be a prudent measure for safeguarding critical servers and mitigating a multitude of security risks. By implementing this restriction, organizations can prevent potential data breaches resulting from unauthorized data transfers or the introduction of malicious software through infected USB devices. 
+
+In addition to direct threat mitigation, this practice can also curtail the risk of insider threats, as it limits the scope for individuals with physical access to the server to compromise its integrity using easily concealable USB devices. 
+
+This exercise will provide you with hands-on experience with disabling USB drive usage on a Linux system via configuration of the /etc/modprobe.d/blacklist.conf file and configuring the rc-local service in Ubuntu Linux to modify and apply the security configuration changes.
+
+Instructions:  
+1.	Stay on your Ubuntu Linux machine (Machine A).
+2.	Open a terminal window.
+3.	Type the command sudo nano /etc/modprobe.d/blacklist.conf and hit Enter.
+ 
+4.	Navigate to the last line/end of the file.
+5.	Add the line blacklist usb_storage
+ 
+6.	Save the changes and exit the file.
+You are adding USB storage to the blacklist which will be referred to by the rc.local script.
+7.	Type the command sudo nano /etc/rc.local and hit Enter.
+ 
+If there is no rc.local file found, we can create it.
+8.	Paste the code found in Appendix I from Page 19.
+ 
+9.	Save the changes and exit the file.
+10.	Type the command sudo chmod +x /etc/rc.local and hit Enter.
+This command uses the change mod command to apply execute privileges to the file.
+ 
+11.	Type the command sudo chown root:root /etc/rc.local and hit Enter.
+This command changes ownership of the /etc/rc.local file to root. This is to ensure it will run under the current account.  
+12.	Type the command sudo nano /etc/systemd/system/rc-local.service and hit Enter.
+ 
+13.	Paste the code found in Appendix II from Page 19.
+ 
+14.	Save the changes and exit the file.
+15.	Type the command sudo systemctl enable rc-local and hit Enter.
+This command enables the rc-local shell script.
+ 
+16.	Type the command sudo systemctl start rc-local.service and hit Enter.
+This command manually starts the rc-local.service.
+ 
+17.	Type the command sudo systemctl status rc-local.service and hit Enter.
+This command queries and outputs the status of the rc-local.service.
+ 
+18.	You have successfully configured your machine to blacklist USB storage devices upon boot. 
+19.	Task: Is it possible to reverse the changes and re-enable USB drive usage if needed? Detail the process below.
+*** Yes it can be reversed by commenting out the modprobe -r usb_storage line in the /etc/rc.local file and rebooting the module.
+
+Part 5 - Checking What Open Ports You Have: 
+Checking open ports is crucial for security as it helps identify potential entry points for unauthorized access to a system. By knowing which ports are open and listening, administrators can close unnecessary or unused ports to reduce the attack surface, preventing attackers from exploiting vulnerable services. This practice enhances overall security by minimizing exposure to potential threats and ensuring that only essential services are accessible from the network.
+
+
+Netstat, an abbreviation for Network Statistics, serves as a potent command-line utility offering valuable insights into the established network connections on your Linux machine. It is essential for network analysis and security as it provides real-time information about network connections, open ports, routing tables, and network statistics. 
+
+Through this exercise, you will gain hands-on proficiency in utilizing netstat to discern active ports, monitor network activities, and enhance your system's overall security. Providing a base of foundational knowledge in the best practices for network security processes.
+
+Instructions:  
+1.	Stay on your Ubuntu Linux machine (Machine A).
+2.	Open a terminal window.
+3.	Type the command sudo apt-get install net-tools and hit Enter.
+ 
+4.	Type the command netstat --help and hit Enter.
+This command will show a summary of how to use the netstat command. Explore this section to gain a basic understanding.
+ 
+5.	Type the command netstat -antp and hit Enter.
+This command uses the switches -a, n, t and p. 
+•	-a (lists all active and listening ports)
+•	-n (shows numerical IP addresses instead of host names)
+•	-t (shows TCP connections)
+•	-p (shows connections per protocol)
+This command is useful for monitoring network activity, identifying active connections and understanding which processes are responsible for network communication.
+ 
+6.	Type the command netstat -tuln and hit Enter.
+This command uses the switches -t, u, l and n. 
+•	-t (shows TCP connections)
+•	-u (shows UDP connections) 
+•	-l (displays only listening ports)
+•	-n (shows numerical IP addresses instead of host names)
+This command is useful for monitoring and diagnosing network activity on a system as it lists all active listening ports for both TCP and UDP protocols.
+ 
+7.	Type the command watch -n 1 netstat -tun and hit Enter.
+This command uses the switches -t, u and n. 
+•	-t (shows TCP connections)
+•	-u (shows UDP connections) 
+•	-n (shows numerical IP addresses instead of host names)
+ 
+
+This command utilizes the ‘watch’ command which is used to run another command at regular intervals and display the output in the terminal. In conjunction with netstat gathering information about network connections through the protocols TCP and UDP on the system. The combination of these allows you to observe the network connections change over time.
+8.	Generate network traffic by opening your web browser and navigating to a website of your choice. View your terminal to see the output from the command run in Step 7.
+Detail your observations below.
+ 
+9.	Task: After discovering what ports are open on your system, use ufw to close vulnerable or undesirable ports. Detail the process below.
+To show open ports and services:
+ 
+Closing port 21/tcp FTP:
+ 
+
+Part 6 - Firewall Setup:
+The iptables command is critical for network security as it enables administrators to configure and manage firewall rules in Linux systems. By using iptables administrators can control incoming and outgoing traffic, define access policies, and filter network packets based on various criteria. This command plays a pivotal role in protecting systems from unauthorized access, preventing malicious traffic, and enforcing security policies, ultimately enhancing the overall security posture of the network.
+
+Unlike installing additional firewall software on your hardened server, using iptables leverages the inherent security features of Linux, making it a preferred approach for firewall management.
+
+Through the following exercise, you will learn the ins and outs of iptables, including how to define rules to filter network traffic, configure a stateful firewall, delete existing rules, flush rules and more to tailor the firewall configurations to specific needs. By mastering the art of iptables, you will gain full control over network traffic, providing you with a formidable defense against potential threats without the need for third-party firewall software. 
+
+Instructions:  
+1.	Stay on your Ubuntu Linux machine (Machine A).
+2.	Open a terminal window.
+3.	Type the command sudo iptables –version and hit Enter.
+ 
+This command will check for the presence of iptables and the version installed if found.
+4.	Type the command sudo iptables -L and hit Enter.
+This command lists all rules in iptables.
+You should see that there are 3 categories of firewall rules:
+•	INPUT (for incoming packets)
+•	OUTPUT (for outgoing packets)
+•	FORWARD (for forwarded packets)
+You should also see the default policy for each class of rules (e.g., policy ACCEPT)
+ 
+
+5.	To configure iptables as a stateful firewall. Type the command sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT and hit Enter.
+This Iptables rule uses the conntrack module to accept incoming traffic that belongs to established connections or is related to an established connection. In other words, it allows response traffic and traffic that is part of an existing communication, ensuring that legitimate traffic is not inadvertently blocked.
+ 
+
+Further explanation of the options applied in this command is below:
+•	-A INPUT: This specifies that the rule should be appended (-A) to the INPUT chain. The INPUT chain is responsible for filtering incoming packets destined for the local system.
+•	-m conntrack: This specifies that the conntrack module is being used. The conntrack module provides connection tracking capabilities, allowing the firewall to keep track of the state of network connections.
+•	--ctstate ESTABLISHED,RELATED: This is a match criterion that filters packets based on their connection state. It specifies that packets in the ESTABLISHED and RELATED states should be matched.
+Let's break down these states:
+•	ESTABLISHED: This state corresponds to packets that are part of an established connection. In other words, the connection has been successfully established, and data can flow in both directions. For example, if your server initiated an outgoing connection to a remote website, incoming responses from that website would be in the ESTABLISHED state.
+•	RELATED: This state includes packets that are related to an existing connection. It covers scenarios where a new connection is somehow related to an established connection. For instance, if your server is using FTP (File Transfer Protocol), the data channel of the FTP connection would be considered RELATED to the control channel.
+•	-j ACCEPT: This specifies the action to take if a packet matches the criteria specified earlier. In this case, the action is to ACCEPT the packet, which means allowing it to pass through the firewall.
+
+A stateful firewall is a type of network security system that keeps track of the state and context of active network connections. Unlike traditional packet-filtering firewalls that only inspect individual packets in isolation, stateful firewalls maintain a table of active connections and use this information to make more informed decisions about allowing or blocking network traffic. This stateful approach enhances security by considering the context and history of each connection.
+
+
+6.	To allow all incoming HTTP traffic, Type the command sudo iptables -A INPUT -p tcp --dport 80 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT and hit Enter.
+This command adds a rule to accept incoming TCP connections on destination port 80.
+This configuration can be especially useful if the server you’re configuring is a Web server as this enables incoming HTTP traffic. 
+ 
+7.	To allow all incoming SSH traffic, Type the command sudo iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT and hit Enter.
+This command adds a rule to accept incoming SSH connections on destination port 22.
+ 
+8.	To add a default drop policy, Type the command sudo iptables -A INPUT -j DROP and hit Enter.
+ 
+A default drop policy will drop all incoming traffic that doesn’t match any rules previously defined, essentially blocking all incoming traffic that has not been approved by your ruleset. 
+9.	To block a specific IP Address, Type the command sudo iptables -A INPUT -s IP_Address -j DROP and hit Enter.
+ 
+Where IP_Address is replaced with the IP address of the machine you would like to deny access to.
+Example: sudo iptables -A INPUT -s 10.0.2.5 -j DROP
+This can be especially useful if you notice malicious traffic from a particular IP address.
+10.	Type the command sudo iptables -L –line-numbers and hit Enter.
+This command displays the rules stored in iptables with an added line number for each rule.
+ 
+11.	To delete a rule. Type the command sudo iptables -D chain_type rule_number and hit Enter.
+Deleting line 5 of chain INPUT:
+ 
+Verifying that line 5 was deleted from rules of chain INPUT:
+ 
+Where chain_type is replaced by the type such as INPUT, FORWARD or OUTPUT and where rule_number is replaced by the number associated with the rule you are removing. This number can be determined by the output of the command in Step 10.
+Example: iptables -D INPUT 3
+12.	To delete all rules by flushing the firewall ruleset. Type the command sudo iptables -F and hit Enter.
+ 
+This command clears all rules from the specified chain, providing a clean slate for rule creation.
+13.	Task: In all previous steps (hardening + firewall), use the other virtual machine to see the effect of changes you make on the hardened server. Use rules for other protocols such as FTP, Telnet and SSH. Detail your findings and observations below.
+14.	Task: Create and apply rules for the open ports you discovered in Part 5. Detail the process below.
+ 
+Using port 80 which is open and creating rules for it: Dropping packet if it is coming from 10.0.2.7
+ 
+Accepting all SSH traffic on port 80
+ 
+Showing the new rules on the open port 80
+ 
+15.	Task: Do research on the tools and techniques used to save Iptables rules permanently. Detail your findings and the process below.
+****
+There are 3 ways to permanently save Iptables:
+a)	Install iptables-persistent package
+b)	Use iptables-save and iptables-restore
+c)	You can also use a custom system service to save and restore iptables rules.
+
+Part 7 - Appendix rc.local Configuration Code (Part 4)
+Copy the code snippets below for Steps 8 and 12 of Part 4
+
+
+I.	/etc/rc.local
+------------------------------------------------------------------------------------------
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+modprobe -r usb_storage
+
+exit 0
+
+
+
+II.	/etc/systemd/system/rc-local.service.
+------------------------------------------------------------------------------------------
+[Unit]
+Description=/etc/rc.local Compatibility
+ConditionPathExists=/etc/rc.local
+
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+
+[Install]
+WantedBy=multi-user.target
+
